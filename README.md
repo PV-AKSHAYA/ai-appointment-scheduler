@@ -1,104 +1,117 @@
+AI-Powered Appointment Scheduler Assistant
+Overview
 
-# AI-Powered Appointment Scheduler Assistant
+This project implements a backend service that converts natural language text or image-based appointment requests into structured appointment data.
 
-## Overview
-This project implements a backend service that converts **natural language text** or **image-based appointment requests** into structured appointment data.  
-It uses **OCR (Tesseract)** for image inputs and **LLM-based NLP (Groq LLaMA 3)** for entity extraction and normalization.
+It uses:
 
-The system is designed as a **multi-stage pipeline** with validation guardrails to handle noisy or ambiguous inputs.
+OCR (Tesseract) for extracting text from images
 
----
+LLM-based NLP (Groq LLaMA 3) for entity extraction and normalization
 
-## Problem Statement Chosen
-**Problem Statement 1: AI-Powered Appointment Scheduler Assistant**
+The system is designed as a multi-stage pipeline with validation guardrails to handle noisy or ambiguous inputs.
+
+Problem Statement Chosen
+
+Problem Statement 1: AI-Powered Appointment Scheduler Assistant
 
 Focus Area:
 OCR → Entity Extraction → Normalization → Structured Output
 
----
-
-## Architecture
-
+Architecture
 Client (Text / Image)
-|
-v
+        |
+        v
 +--------------------+
-| OCR (Tesseract) | ← image only
+| OCR (Tesseract)    |  ← image only
 +--------------------+
-|
-v
+        |
+        v
 +--------------------+
-| Entity Extraction | ← Groq LLaMA3
+| Entity Extraction  |  ← Groq LLaMA 3
 +--------------------+
-|
-v
+        |
+        v
 +--------------------+
-| Normalization | ← Regex + LLM fallback
-| (Asia/Kolkata) |
+| Normalization      |
+| (Asia/Kolkata)     |
+| Regex + LLM        |
 +--------------------+
-|
-v
+        |
+        v
 +--------------------+
-| Guardrails & |
-| Final JSON Output |
+| Guardrails &       |
+| Final JSON Output  |
 +--------------------+
-|
-v
+        |
+        v
 SQLite Database
 
+Tech Stack
 
+FastAPI – Backend framework
 
----
+Tesseract OCR – Image text extraction
 
-## Tech Stack
+Groq API (LLaMA 3) – NLP entity extraction & normalization
 
-- **FastAPI** – Backend framework
-- **Tesseract OCR** – Image text extraction
-- **Groq API (LLaMA 3)** – NLP entity extraction & normalization
-- **SQLite** – Local persistence
-- **Python 3.10+**
+SQLite – Local persistence
 
----
+Python 3.10+
 
-## Features
+Features
 
-- Accepts **typed text** or **images (scanned notes / emails)**
-- Handles **OCR noise** (e.g., `nxt`, `@`, spelling mistakes)
-- Extracts:
-  - Department
-  - Date phrase
-  - Time phrase
-- Normalizes date & time to **Asia/Kolkata timezone**
-- Implements **guardrails**:
-  - Ambiguous date/time detection
-  - Department missing detection
-- Stores confirmed appointments with confidence scores
-- REST API with Swagger documentation
+Accepts typed text or images (scanned notes / emails)
 
----
+Handles OCR noise (e.g., nxt, @, spelling mistakes)
 
-## API Endpoints
+Extracts:
 
-### 1️ OCR – Image to Text
-**POST** `/api/ocr`
+Department
 
-**Input:** Image file  
-**Output:**
-```json
+Date phrase
+
+Time phrase
+
+Normalizes date & time to Asia/Kolkata timezone
+
+Implements guardrails:
+
+Ambiguous date/time detection
+
+Missing department detection
+
+Stores confirmed appointments with confidence scores
+
+REST API with Swagger documentation
+
+API Endpoints
+1. OCR – Image to Text
+
+POST /api/ocr
+
+Input: Image file
+
+Response:
+
 {
   "raw_text": "Book dentist next Friday at 3pm",
   "confidence": 0.9
 }
-2️ Entity Extraction
+
+2. Entity Extraction
+
 POST /api/extract-entities
 
-json
+Request:
+
 {
   "text": "Book dentist next Friday at 3pm"
 }
+
+
 Response:
 
-json
 {
   "entities": {
     "date_phrase": "next Friday",
@@ -107,12 +120,13 @@ json
   },
   "entities_confidence": 0.85
 }
-3️ Normalization (Asia/Kolkata)
+
+3. Normalization (Asia/Kolkata)
+
 POST /api/normalize
 
 Response:
 
-json
 {
   "normalized": {
     "date": "2025-09-26",
@@ -121,16 +135,20 @@ json
   },
   "normalization_confidence": 0.95
 }
-4️ Final Appointment Creation
+
+4. Final Appointment Creation
+
 POST /api/schedule-text
 
-json
+Request:
+
 {
   "text": "Book dentist next Friday at 3pm"
 }
+
+
 Success Response:
 
-json
 {
   "status": "ok",
   "appointment": {
@@ -141,40 +159,45 @@ json
     "tz": "Asia/Kolkata"
   }
 }
-Guardrail Response (Ambiguity)
-json
+
+
+Guardrail Response (Ambiguity):
+
 {
   "status": "needs_clarification",
   "message": "Ambiguous date/time or department"
 }
+
 Sample cURL Requests
 Text Input
-
 curl -X POST http://127.0.0.1:8000/api/schedule-text \
 -H "Content-Type: application/json" \
 -d '{"text":"book dentist next friday at 3pm"}'
-Image Input
 
+Image Input
 curl -X POST http://127.0.0.1:8000/api/schedule-image \
 -F "file=@note.jpg"
+
 Setup Instructions
-1️ Install Dependencies
-
+1. Install Dependencies
 pip install fastapi uvicorn pytesseract pillow groq pytz
-2️ Install Tesseract OCR
-Windows: Install from https://github.com/tesseract-ocr/tesseract
 
-Update path in code if required
+2. Install Tesseract OCR
 
-3️ Set Environment Variable
+Windows: https://github.com/tesseract-ocr/tesseract
 
+Update Tesseract path in code if required
+
+3. Set Environment Variable
 export GROQ_API_KEY=your_api_key_here
-4️ Run Server
 
 
-uvicorn app:app --reload
+(On Windows PowerShell: $env:GROQ_API_KEY="your_api_key_here")
+
+4. Run the Server
+uvicorn appointment_scheduler:app
+
+
 Open Swagger UI:
-
-
 
 http://127.0.0.1:8000/docs
